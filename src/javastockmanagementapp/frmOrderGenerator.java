@@ -9,18 +9,19 @@ package javastockmanagementapp;
  *
  * @author Anuj
  */
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.table.DefaultTableModel;
+
 public class frmOrderGenerator extends javax.swing.JFrame {
 
     /**
@@ -128,10 +129,10 @@ public class frmOrderGenerator extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-    
+
     //Variables and data structures initialization
-    public static final Map<String,Integer> DIC_STOCK = new HashMap<>();
-    
+    public static Map<String, Integer> DIC_STOCK = new HashMap<>();
+
     private void ddClientIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ddClientIDActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_ddClientIDActionPerformed
@@ -165,32 +166,42 @@ public class frmOrderGenerator extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
-            new frmOrderGenerator().setVisible(true);
-            
             try {
+                new frmOrderGenerator().setVisible(true);
                 fillClientDropDown();
-                checkStock();
-                updateProductsTable();
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            checkStock();
+                            updateProductsTable();
+                        } catch (Exception ex) {
+                            Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                };
+                ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+                service.scheduleAtFixedRate(runnable, 0, 1, TimeUnit.SECONDS);
             } catch (Exception ex) {
                 Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
+
     }
-    
+
     //Populate drop down using clients' name from clients table
-    private static void fillClientDropDown() throws SQLException, Exception
-    {
-        HashMap<String,String> dicClients;
+    private static void fillClientDropDown() throws SQLException, Exception {
+        HashMap<String, String> dicClients;
 
         try {
             ResultSet result = dbConnect.getConnection().createStatement().
                     executeQuery("SELECT * FROM tblclients");
             dicClients = new HashMap<>();
-            
+
             while (result.next()) {
-                dicClients.put(result.getString("clientID"),result.getString("clientName"));
+                dicClients.put(result.getString("clientID"), result.getString("clientName"));
             }
-            
+
             dicClients.values().forEach((clientName) -> {
                 ddClientID.addItem(clientName);
             });
@@ -199,71 +210,63 @@ public class frmOrderGenerator extends javax.swing.JFrame {
             throw ex;
         }
     }
-    
+
     //Update table with lists of products in stock
-    private static void updateProductsTable() throws Exception{
+    private static void updateProductsTable() throws Exception {
         DefaultTableModel model = new DefaultTableModel();
         model.setColumnIdentifiers(new Object[]{"", "Product Name", "Unit Price", "Quantity"});
-        try{
+        try {
             ResultSet result = dbConnect.getConnection().createStatement().
                     executeQuery("SELECT * FROM tblproducts");
-            
-            while(result.next()){
-                if(DIC_STOCK.keySet().contains(result.getString("pdtID")))
-                    model.addRow(new Object[]{ false,result.getString("pdtName"),
+
+            while (result.next()) {
+                if (DIC_STOCK.keySet().contains(result.getString("pdtID"))) {
+                    model.addRow(new Object[]{false, result.getString("pdtName"),
                         result.getFloat("pdtUnitPrice")});
+                }
             }
-        }
-        catch(Exception ex)
-        {
-        throw ex;
-        }
-        finally
-        {
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
             tblTakeOrder.setModel(model);
         }
-        
+
     }
-    
-    private static List<clsProduct> getProductList() throws SQLException, Exception
-    {
+
+    private static List<clsProduct> getProductList() throws SQLException, Exception {
         List<clsProduct> lstProducts = new ArrayList<>();
-        try{
+        try {
             ResultSet result = dbConnect.getConnection().createStatement().
                     executeQuery("SELECT * FROM tblproducts");
-            
-            while(result.next()){
-                lstProducts.add(new clsProduct(result.getString("pdtID"),result.getString("pdtName"),
-                        result.getString("pdtRefNum"),result.getFloat("pdtUnitPrice")));
+
+            while (result.next()) {
+                lstProducts.add(new clsProduct(result.getString("pdtID"), result.getString("pdtName"),
+                        result.getString("pdtRefNum"), result.getFloat("pdtUnitPrice")));
             }
-            
+
             return lstProducts;
+        } catch (Exception ex) {
+            throw ex;
         }
-        catch(Exception ex)
-        {
-        throw ex;
-        }
-        
+
     }
-    
+
     //check current quanitity of all products in stock and update quantity list
-    private static void checkStock() throws Exception{
-        try{
+    private static void checkStock() throws Exception {
+        try {
+            DIC_STOCK.clear();
             ResultSet result = dbConnect.getConnection().createStatement().
                     executeQuery("SELECT * FROM tblstock where Quantity > 0");
-            
-            while(result.next()){
-                if (!DIC_STOCK.isEmpty())
-                    DIC_STOCK.clear();
-               DIC_STOCK.put(result.getString("pdtID"),result.getInt("Quantity"));
+
+            while (result.next()) {
+                if (!DIC_STOCK.containsKey(result.getString("pdtID")))
+                    DIC_STOCK.put(result.getString("pdtID"), result.getInt("Quantity"));
             }
-        }
-        catch(Exception ex)
-        {
-        throw ex;
+        } catch (Exception ex) {
+            throw ex;
         }
     }
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private static javax.swing.JComboBox<String> ddClientID;
     private javax.swing.JButton jButton1;
