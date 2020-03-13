@@ -9,17 +9,18 @@ package javastockmanagementapp;
  *
  * @author Anuj
  */
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 public class frmOrderGenerator extends javax.swing.JFrame {
@@ -43,7 +44,7 @@ public class frmOrderGenerator extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         ddClientID = new javax.swing.JComboBox<>();
         jSeparator1 = new javax.swing.JSeparator();
-        jButton1 = new javax.swing.JButton();
+        btnGenerateOrder = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblTakeOrder = new javax.swing.JTable(){
             private static final long serialVersionUID = 1L;
@@ -76,8 +77,13 @@ public class frmOrderGenerator extends javax.swing.JFrame {
             }
         });
 
-        jButton1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        jButton1.setText("Generate Order");
+        btnGenerateOrder.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        btnGenerateOrder.setText("Generate Order");
+        btnGenerateOrder.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGenerateOrderActionPerformed(evt);
+            }
+        });
 
         jScrollPane2.setViewportView(tblTakeOrder);
         tblTakeOrder.getAccessibleContext().setAccessibleName("");
@@ -100,7 +106,7 @@ public class frmOrderGenerator extends javax.swing.JFrame {
                                 .addComponent(ddClientID, javax.swing.GroupLayout.PREFERRED_SIZE, 239, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
                                 .addGap(109, 109, 109)
-                                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(btnGenerateOrder, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
                                 .addContainerGap()
                                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 372, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -119,13 +125,13 @@ public class frmOrderGenerator extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 279, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnGenerateOrder, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
         jLabel1.getAccessibleContext().setAccessibleName("lblClientId");
         ddClientID.getAccessibleContext().setAccessibleName("\"\"");
-        jButton1.getAccessibleContext().setAccessibleName("btnGenerateOrder");
+        btnGenerateOrder.getAccessibleContext().setAccessibleName("btnGenerateOrder");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -134,8 +140,37 @@ public class frmOrderGenerator extends javax.swing.JFrame {
     public static Map<String, Integer> DIC_STOCK = new HashMap<>();
 
     private void ddClientIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ddClientIDActionPerformed
-        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            checkStock();
+            updateProductsTable();
+        } catch (Exception ex) {
+            Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_ddClientIDActionPerformed
+
+    private void btnGenerateOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateOrderActionPerformed
+        try {
+            // TODO add your handling code here:
+            //clsClient objClient = getClient();
+            //getSelectedProducts();
+            Date date = Calendar.getInstance().getTime();
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+            PreparedStatement psInsertOrder = dbConnect.getConnection().
+            prepareStatement("Insert into tblOrders values (?,?,?,?)");
+            psInsertOrder.setString(1,"ord02");
+            psInsertOrder.setString(2, getClient().sClientID);
+            psInsertOrder.setString(3,getSelectedProducts());
+            psInsertOrder.setString(4, dateFormat.format(date));
+            JOptionPane.showMessageDialog(null, "Order Inserted Successfully");
+            
+            
+        } catch (Exception ex) {
+            Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
+    }//GEN-LAST:event_btnGenerateOrderActionPerformed
 
     /**
      * @param args the command line arguments
@@ -153,15 +188,11 @@ public class frmOrderGenerator extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(frmOrderGenerator.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(frmOrderGenerator.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(frmOrderGenerator.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(frmOrderGenerator.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        
         //</editor-fold>
 
         /* Create and display the form */
@@ -169,19 +200,6 @@ public class frmOrderGenerator extends javax.swing.JFrame {
             try {
                 new frmOrderGenerator().setVisible(true);
                 fillClientDropDown();
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            checkStock();
-                            updateProductsTable();
-                        } catch (Exception ex) {
-                            Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                };
-                ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-                service.scheduleAtFixedRate(runnable, 0, 1, TimeUnit.SECONDS);
             } catch (Exception ex) {
                 Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -233,24 +251,6 @@ public class frmOrderGenerator extends javax.swing.JFrame {
 
     }
 
-    private static List<clsProduct> getProductList() throws SQLException, Exception {
-        List<clsProduct> lstProducts = new ArrayList<>();
-        try {
-            ResultSet result = dbConnect.getConnection().createStatement().
-                    executeQuery("SELECT * FROM tblproducts");
-
-            while (result.next()) {
-                lstProducts.add(new clsProduct(result.getString("pdtID"), result.getString("pdtName"),
-                        result.getString("pdtRefNum"), result.getFloat("pdtUnitPrice")));
-            }
-
-            return lstProducts;
-        } catch (Exception ex) {
-            throw ex;
-        }
-
-    }
-
     //check current quanitity of all products in stock and update quantity list
     private static void checkStock() throws Exception {
         try {
@@ -259,17 +259,37 @@ public class frmOrderGenerator extends javax.swing.JFrame {
                     executeQuery("SELECT * FROM tblstock where Quantity > 0");
 
             while (result.next()) {
-                if (!DIC_STOCK.containsKey(result.getString("pdtID")))
-                    DIC_STOCK.put(result.getString("pdtID"), result.getInt("Quantity"));
+                DIC_STOCK.put(result.getString("pdtID"), result.getInt("Quantity"));
             }
         } catch (Exception ex) {
             throw ex;
         }
     }
+    
+    //returns current client selected in drop down
+    private clsClient getClient() throws Exception{
+        PreparedStatement psGetClient = dbConnect.getConnection().
+        prepareStatement("Select * from tblClients where clientName=?");
+        psGetClient.setString(1,ddClientID.getSelectedItem().toString());
+        ResultSet result = psGetClient.executeQuery();
+        result.next();
+        return new clsClient(result.getString("clientID"),result.getString("clientName"));
+    }
+    
+    //returns selected articles and their quantities
+    private String getSelectedProducts(){
+        String orders = "";
+        for(int i = 0;i<tblTakeOrder.getRowCount();i++){
+            if(tblTakeOrder.getValueAt(i, 0) == Boolean.TRUE){
+                orders += ((String) tblTakeOrder.getValueAt(i, 1) + "-" + tblTakeOrder.getValueAt(i, 3)+" ");
+            }
+        }
+        return orders;
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnGenerateOrder;
     private static javax.swing.JComboBox<String> ddClientID;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSeparator jSeparator1;
