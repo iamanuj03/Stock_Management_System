@@ -152,16 +152,14 @@ public class frmOrderGenerator extends javax.swing.JFrame {
     private void btnGenerateOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateOrderActionPerformed
         try {
             // TODO add your handling code here:
-            //clsClient objClient = getClient();
-            //getSelectedProducts();
-            Date date = Calendar.getInstance().getTime();
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+            java.sql.Timestamp date = new java.sql.Timestamp(new java.util.Date().getTime());
             PreparedStatement psInsertOrder = dbConnect.getConnection().
             prepareStatement("Insert into tblOrders values (?,?,?,?)");
-            psInsertOrder.setString(1,"ord02");
+            psInsertOrder.setString(1,getNextOrderID());
             psInsertOrder.setString(2, getClient().sClientID);
             psInsertOrder.setString(3,getSelectedProducts());
-            psInsertOrder.setString(4, dateFormat.format(date));
+            psInsertOrder.setTimestamp(4, date);
+            psInsertOrder.execute();
             JOptionPane.showMessageDialog(null, "Order Inserted Successfully");
             
             
@@ -176,34 +174,41 @@ public class frmOrderGenerator extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
+            /* Set the Nimbus look and feel */
+            //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+            /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+            * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+            */
+            try {
+                for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                    if ("Nimbus".equals(info.getName())) {
+                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
                 }
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+                java.util.logging.Logger.getLogger(frmOrderGenerator.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(frmOrderGenerator.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            //</editor-fold>
+
+            //</editor-fold>
+            getNextOrderID();
+            /* Create and display the form */
+            java.awt.EventQueue.invokeLater(() -> {
+                try {
+                    new frmOrderGenerator().setVisible(true);
+                    fillClientDropDown();
+                } catch (Exception ex) {
+                    Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+            
+        } catch (Exception ex) {
+            Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> {
-            try {
-                new frmOrderGenerator().setVisible(true);
-                fillClientDropDown();
-            } catch (Exception ex) {
-                Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        });
 
     }
 
@@ -285,6 +290,22 @@ public class frmOrderGenerator extends javax.swing.JFrame {
             }
         }
         return orders;
+    }
+    
+    //queries last order entry and enters next orderID
+    private static String getNextOrderID() throws Exception{
+        StringBuilder sb = new StringBuilder();
+        ResultSet result = dbConnect.getConnection().createStatement().
+                    executeQuery("SELECT orderID FROM tblorders ORDER BY orderID DESC LIMIT 1");
+        if (result.next()) {
+            for (char c : result.getString("orderID").toCharArray()) {
+                if (Character.isDigit(c)) {
+                    sb.append(c);
+                }
+            }
+
+        }
+        return "ord"+Integer.toString(Integer.parseInt(sb.toString())+1);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
