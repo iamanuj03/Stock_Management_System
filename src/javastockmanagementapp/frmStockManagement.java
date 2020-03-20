@@ -5,6 +5,15 @@
  */
 package javastockmanagementapp;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
 /**
  *
  * @author Anuj
@@ -28,42 +37,55 @@ public class frmStockManagement extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tblStockVisual = new javax.swing.JTable(){
+            private static final long serialVersionUID = 1L;
+            @Override
+            public Class getColumnClass(int column) {
+                switch (column) {
+                    case 0:
+                    return String.class;
+                    case 1:
+                    return Integer.class;
+                    default:
+                    return String.class;
+                }
+            }
+        };
         jScrollPane2 = new javax.swing.JScrollPane();
-        jTable2 = new javax.swing.JTable();
-        jButton1 = new javax.swing.JButton();
+        tblPlaceOrder = new javax.swing.JTable(){
+            private static final long serialVersionUID = 1L;
+            @Override
+            public Class getColumnClass(int column) {
+                switch (column) {
+                    case 0:
+                    return Boolean.class;
+                    case 1:
+                    return String.class;
+                    case 2:
+                    return Integer.class;
+                    default:
+                    return String.class;
+                }
+            }
+
+        };
+        btnPlaceOrder = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        jScrollPane1.setViewportView(jTable1);
+        jScrollPane1.setViewportView(tblStockVisual);
 
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        jScrollPane2.setViewportView(jTable2);
+        jScrollPane2.setViewportView(tblPlaceOrder);
 
-        jButton1.setText("jButton1");
+        btnPlaceOrder.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+        btnPlaceOrder.setText("Place Order");
+        btnPlaceOrder.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPlaceOrderActionPerformed(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
         jLabel1.setText("Place Order");
@@ -85,7 +107,7 @@ public class frmStockManagement extends javax.swing.JFrame {
                         .addGap(25, 25, 25))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(89, 89, 89)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 274, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnPlaceOrder, javax.swing.GroupLayout.PREFERRED_SIZE, 274, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap(54, Short.MAX_VALUE))))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addGap(29, 29, 29)
@@ -106,12 +128,33 @@ public class frmStockManagement extends javax.swing.JFrame {
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 312, Short.MAX_VALUE)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnPlaceOrder, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(45, 45, 45))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnPlaceOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPlaceOrderActionPerformed
+        // TODO add your handling code here:
+        java.sql.Timestamp date = new java.sql.Timestamp(new java.util.Date().getTime());
+        getProductsToOrder().entrySet().forEach((_item) -> {
+            try {
+                PreparedStatement psInsertOrder = dbConnect.getConnection().
+                        prepareStatement("Insert into tblstockorders values (?,?,?)");
+                psInsertOrder.setString(1,getProduct(_item.getKey()).pdtRefNum);
+                psInsertOrder.setInt(2, _item.getValue());
+                psInsertOrder.setTimestamp(3, date);
+                psInsertOrder.execute();
+                JOptionPane.showMessageDialog(null, "Order Placed Successfully");
+            } catch (SQLException ex) {
+                Logger.getLogger(frmStockManagement.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
+                Logger.getLogger(frmStockManagement.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        
+    }//GEN-LAST:event_btnPlaceOrderActionPerformed
 
     /**
      * @param args the command line arguments
@@ -141,20 +184,90 @@ public class frmStockManagement extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
+        java.awt.EventQueue.invokeLater(() -> {
+            try {
                 new frmStockManagement().setVisible(true);
+                updateStockVisualTable();
+                fillStockTable();
+            } catch (Exception ex) {
+                Logger.getLogger(frmStockManagement.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
     }
+    
+    //Update stock visualisation table
+    private static void updateStockVisualTable() throws Exception {
+        DefaultTableModel model = new DefaultTableModel();
+        model.setColumnIdentifiers(new Object[]{"Product Name", "Quantity"});
+        try {
+            ResultSet result = dbConnect.getConnection().createStatement().
+                    executeQuery("SELECT p.pdtName, s.Quantity "
+                            +    "FROM tblstock s, tblproducts p "
+                            +    "WHERE p.pdtID = s.pdtID; ");
+
+            while (result.next()) {
+                model.addRow(new Object[]{result.getString("pdtName"),
+                    result.getFloat("Quantity")});
+            }
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            tblStockVisual.setModel(model);
+        }
+    }
+    
+    //display Items in Order Table
+    private static void fillStockTable() throws Exception {
+        DefaultTableModel model = new DefaultTableModel();
+        model.setColumnIdentifiers(new Object[]{"","Product Name", "Enter Quantity"});
+        try {
+            ResultSet result = dbConnect.getConnection().createStatement().
+                    executeQuery("SELECT p.pdtName "
+                            +    "FROM tblstock s, tblproducts p "
+                            +    "WHERE p.pdtID = s.pdtID; ");
+
+            while (result.next()) {
+                model.addRow(new Object[]{false,result.getString("pdtName"),
+                    null});
+            }
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            tblPlaceOrder.setModel(model);
+        }
+    }
+    
+    //get selected products and respective quantities to order
+    private static HashMap<String, Integer> getProductsToOrder(){
+        HashMap<String, Integer> productsToOrder = new HashMap<>();
+        for(int i = 0;i<tblPlaceOrder.getRowCount();i++){
+            if(tblPlaceOrder.getValueAt(i, 0) == Boolean.TRUE){
+                productsToOrder.put((String) tblPlaceOrder.getValueAt(i, 1),(Integer) tblPlaceOrder.getValueAt(i, 2));
+            }
+        }
+        return productsToOrder;
+    }
+    
+    //get product reference number given its name
+    private static clsProduct getProduct(String pdtName) throws Exception{
+        PreparedStatement psGetClient = dbConnect.getConnection().
+        prepareStatement("Select * from tblproducts where pdtName=?");
+        psGetClient.setString(1,pdtName);
+        ResultSet result = psGetClient.executeQuery();
+        result.next();
+        return new clsProduct(result.getString("pdtID"),
+                result.getString("pdtName"),
+                result.getString("pdtRefNum"),
+                result.getFloat("pdtUnitPrice"));
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton btnPlaceOrder;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTable jTable2;
+    private static javax.swing.JTable tblPlaceOrder;
+    private static javax.swing.JTable tblStockVisual;
     // End of variables declaration//GEN-END:variables
 }
