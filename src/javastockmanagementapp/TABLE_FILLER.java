@@ -9,12 +9,6 @@ package javastockmanagementapp;
  *
  * @author Anuj
  */
-public class clsClient {
-    public String sClientID;
-    public String sClientName;
-    
-    public clsClient(String id,String nm){
-        this.sClientID = id;
-        this.sClientName = nm;
-    }
+public interface TABLE_FILLER extends GUI_UPDATER {
+    public abstract void fillTable(javax.swing.JTable tbl);
 }

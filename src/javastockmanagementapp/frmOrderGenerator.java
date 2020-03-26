@@ -152,7 +152,7 @@ public class frmOrderGenerator extends javax.swing.JFrame {
             PreparedStatement psInsertOrder = dbConnect.getConnection().
             prepareStatement("Insert into tblOrders values (?,?,?,?)");
             psInsertOrder.setString(1,getNextOrderID());
-            psInsertOrder.setString(2, getClient().sClientID);
+            psInsertOrder.setString(2, getClient().sUserID);
             psInsertOrder.setString(3,getSelectedProducts());
             psInsertOrder.setTimestamp(4, date);
             psInsertOrder.execute();
@@ -268,13 +268,13 @@ public class frmOrderGenerator extends javax.swing.JFrame {
     }
     
     //returns current client selected in drop down
-    private clsClient getClient() throws Exception{
+    private User getClient() throws Exception{
         PreparedStatement psGetClient = dbConnect.getConnection().
         prepareStatement("Select * from tblClients where clientName=?");
         psGetClient.setString(1,ddClientID.getSelectedItem().toString());
         ResultSet result = psGetClient.executeQuery();
         result.next();
-        return new clsClient(result.getString("clientID"),result.getString("clientName"));
+        return new User(result.getString("clientID"),result.getString("clientName"));
     }
     
     //returns selected articles and their quantities
