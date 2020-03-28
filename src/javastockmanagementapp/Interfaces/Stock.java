@@ -3,13 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package javastockmanagementapp;
+package javastockmanagementapp.Interfaces;
+
+import javastockmanagementapp.clsProduct;
 
 /**
  *
  * @author Anuj
  */
-public interface Stock {
-    public abstract java.util.HashMap<String,Integer> getProductsToOrder();
+public interface Stock extends TABLE_FILLER{
+    public abstract java.util.HashMap<String,Integer> getProductsToOrder(javax.swing.JTable tbl);
     public abstract clsProduct getProduct(String pdtName);
 }
