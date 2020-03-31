@@ -5,7 +5,6 @@
  */
 package javastockmanagementapp;
 
-import javastockmanagementapp.Interfaces.Stock;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,14 +12,13 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 /**
  *
  * @author Anuj
  */
-public class frmStockManagement extends javax.swing.JFrame implements Stock {
+public class frmStockManagement extends javax.swing.JFrame {
 
     /**
      * Creates new form frmStockManagement
@@ -140,7 +138,7 @@ public class frmStockManagement extends javax.swing.JFrame implements Stock {
     private void btnPlaceOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPlaceOrderActionPerformed
         // TODO add your handling code here:
         java.sql.Timestamp date = new java.sql.Timestamp(new java.util.Date().getTime());
-        getProductsToOrder(tblPlaceOrder).entrySet().forEach((_item) -> {
+        getProductsToOrder().entrySet().forEach((_item) -> {
             try {
                 PreparedStatement psInsertOrder = dbConnect.getConnection().
                         prepareStatement("Insert into tblstockorders values (?,?,?)");
@@ -188,10 +186,9 @@ public class frmStockManagement extends javax.swing.JFrame implements Stock {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
             try {
-                frmStockManagement objStockManagement = new frmStockManagement();
-                objStockManagement.setVisible(true);
-                objStockManagement.updateTable(tblStockVisual);
-                objStockManagement.fillTable(tblPlaceOrder);
+                new frmStockManagement().setVisible(true);
+                updateStockVisualTable();
+                fillStockTable();
             } catch (Exception ex) {
                 Logger.getLogger(frmStockManagement.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -199,8 +196,7 @@ public class frmStockManagement extends javax.swing.JFrame implements Stock {
     }
     
     //Update stock visualisation table
-    @Override
-    public void updateTable(JTable tbl) {
+    private static void updateStockVisualTable() throws Exception {
         DefaultTableModel model = new DefaultTableModel();
         model.setColumnIdentifiers(new Object[]{"Product Name", "Quantity"});
         try {
@@ -214,19 +210,14 @@ public class frmStockManagement extends javax.swing.JFrame implements Stock {
                     result.getFloat("Quantity")});
             }
         } catch (Exception ex) {
-            try {
-                throw ex;
-            } catch (Exception ex1) {
-                Logger.getLogger(frmStockManagement.class.getName()).log(Level.SEVERE, null, ex1);
-            }
+            throw ex;
         } finally {
-            tbl.setModel(model);
+            tblStockVisual.setModel(model);
         }
     }
-   
+    
     //display Items in Order Table
-    @Override
-    public void fillTable(javax.swing.JTable tbl){
+    private static void fillStockTable() throws Exception {
         DefaultTableModel model = new DefaultTableModel();
         model.setColumnIdentifiers(new Object[]{"","Product Name", "Enter Quantity"});
         try {
@@ -240,45 +231,34 @@ public class frmStockManagement extends javax.swing.JFrame implements Stock {
                     null});
             }
         } catch (Exception ex) {
-            try {
-                throw ex;
-            } catch (Exception ex1) {
-                Logger.getLogger(frmStockManagement.class.getName()).log(Level.SEVERE, null, ex1);
-            }
+            throw ex;
         } finally {
-            tbl.setModel(model);
+            tblPlaceOrder.setModel(model);
         }
     }
-   
+    
     //get selected products and respective quantities to order
-    @Override
-    public HashMap<String, Integer> getProductsToOrder(javax.swing.JTable tbl){
+    private static HashMap<String, Integer> getProductsToOrder(){
         HashMap<String, Integer> productsToOrder = new HashMap<>();
-        for(int i = 0;i<tbl.getRowCount();i++){
-            if(tbl.getValueAt(i, 0) == Boolean.TRUE){
-                productsToOrder.put((String) tbl.getValueAt(i, 1),(Integer) tbl.getValueAt(i, 2));
+        for(int i = 0;i<tblPlaceOrder.getRowCount();i++){
+            if(tblPlaceOrder.getValueAt(i, 0) == Boolean.TRUE){
+                productsToOrder.put((String) tblPlaceOrder.getValueAt(i, 1),(Integer) tblPlaceOrder.getValueAt(i, 2));
             }
         }
         return productsToOrder;
     }
     
     //get product reference number given its name
-    @Override
-    public clsProduct getProduct(String pdtName){
-        try {
-            PreparedStatement psGetClient = dbConnect.getConnection().
-                    prepareStatement("Select * from tblproducts where pdtName=?");
-            psGetClient.setString(1,pdtName);
-            ResultSet result = psGetClient.executeQuery();
-            result.next();
-            return new clsProduct(result.getString("pdtID"),
-                    result.getString("pdtName"),
-                    result.getString("pdtRefNum"),
-                    result.getFloat("pdtUnitPrice"));
-        } catch (Exception ex) {
-            Logger.getLogger(frmStockManagement.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
+    private static clsProduct getProduct(String pdtName) throws Exception{
+        PreparedStatement psGetClient = dbConnect.getConnection().
+        prepareStatement("Select * from tblproducts where pdtName=?");
+        psGetClient.setString(1,pdtName);
+        ResultSet result = psGetClient.executeQuery();
+        result.next();
+        return new clsProduct(result.getString("pdtID"),
+                result.getString("pdtName"),
+                result.getString("pdtRefNum"),
+                result.getFloat("pdtUnitPrice"));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -290,6 +270,4 @@ public class frmStockManagement extends javax.swing.JFrame implements Stock {
     private static javax.swing.JTable tblPlaceOrder;
     private static javax.swing.JTable tblStockVisual;
     // End of variables declaration//GEN-END:variables
-
-    
 }

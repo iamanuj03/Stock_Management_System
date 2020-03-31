@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
-public class frmOrderGenerator extends javax.swing.JFrame implements javastockmanagementapp.Interfaces.Order {
+public class frmOrderGenerator extends javax.swing.JFrame {
 
     /**
      * Creates new form frmOrderGenerator
@@ -138,8 +138,8 @@ public class frmOrderGenerator extends javax.swing.JFrame implements javastockma
     private void ddClientIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ddClientIDActionPerformed
         try {
             // TODO add your handling code here:
-            verifyStock();
-            updateTable(tblTakeOrder);
+            checkStock();
+            updateProductsTable();
         } catch (Exception ex) {
             Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -152,11 +152,13 @@ public class frmOrderGenerator extends javax.swing.JFrame implements javastockma
             PreparedStatement psInsertOrder = dbConnect.getConnection().
             prepareStatement("Insert into tblOrders values (?,?,?,?)");
             psInsertOrder.setString(1,getNextOrderID());
-            psInsertOrder.setString(2, getActiveUser(ddClientID).sUserID);
-            psInsertOrder.setString(3,getSelectedProducts(tblTakeOrder));
+            psInsertOrder.setString(2, getClient().sUserID);
+            psInsertOrder.setString(3,getSelectedProducts());
             psInsertOrder.setTimestamp(4, date);
             psInsertOrder.execute();
-            JOptionPane.showMessageDialog(null, "Order Inserted Successfully");
+            
+            JOptionPane.showMessageDialog(null, "Order Inserted Successfully"+ " The total gift points is:"+
+                    clsPromotions.calculatePromotions(getTotalQuantity(), 0.10)+" unit(s)");
             
             
         } catch (Exception ex) {
@@ -190,12 +192,12 @@ public class frmOrderGenerator extends javax.swing.JFrame implements javastockma
             //</editor-fold>
 
             //</editor-fold>
+            getNextOrderID();
             /* Create and display the form */
             java.awt.EventQueue.invokeLater(() -> {
                 try {
-                    frmOrderGenerator objOrderGenerator = new frmOrderGenerator();
-                    objOrderGenerator.setVisible(true);
-                    objOrderGenerator.fillDropDown(ddClientID);
+                    new frmOrderGenerator().setVisible(true);
+                    fillClientDropDown();
                 } catch (Exception ex) {
                     Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -209,9 +211,8 @@ public class frmOrderGenerator extends javax.swing.JFrame implements javastockma
     }
 
     //Populate drop down using clients' name from clients table
-    @Override
-    public void fillDropDown(javax.swing.JComboBox dd){
-         HashMap<String, String> dicClients;
+    private static void fillClientDropDown() throws SQLException, Exception {
+        HashMap<String, String> dicClients;
 
         try {
             ResultSet result = dbConnect.getConnection().createStatement().
@@ -223,23 +224,16 @@ public class frmOrderGenerator extends javax.swing.JFrame implements javastockma
             }
 
             dicClients.values().forEach((clientName) -> {
-                dd.addItem(clientName);
+                ddClientID.addItem(clientName);
             });
 
         } catch (SQLException ex) {
-             try {
-                 throw ex;
-             } catch (SQLException ex1) {
-                 Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex1);
-             }
-        } catch (Exception ex) {
-            Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            throw ex;
         }
     }
-    
+
     //Update table with lists of products in stock
-    @Override
-    public void updateTable(javax.swing.JTable tbl){
+    private static void updateProductsTable() throws Exception {
         DefaultTableModel model = new DefaultTableModel();
         model.setColumnIdentifiers(new Object[]{"", "Product Name", "Unit Price", "Quantity"});
         try {
@@ -247,91 +241,79 @@ public class frmOrderGenerator extends javax.swing.JFrame implements javastockma
                     executeQuery("SELECT * FROM tblproducts");
 
             while (result.next()) {
-                if (DIC_CURRENT_STOCK.keySet().contains(result.getString("pdtID"))) {
+                if (DIC_STOCK.keySet().contains(result.getString("pdtID"))) {
                     model.addRow(new Object[]{false, result.getString("pdtName"),
                         result.getFloat("pdtUnitPrice")});
                 }
             }
         } catch (Exception ex) {
-            try {
-                throw ex;
-            } catch (Exception ex1) {
-                Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex1);
-            }
+            throw ex;
         } finally {
-            tbl.setModel(model);
+            tblTakeOrder.setModel(model);
         }
+
     }
 
     //check current quanitity of all products in stock and update quantity list
-    @Override
-    public void verifyStock(){
+    private static void checkStock() throws Exception {
         try {
-            if (DIC_CURRENT_STOCK != null) {
-                DIC_CURRENT_STOCK.clear();
-            }
-            ResultSet result = dbConnect.getConnection().createStatement().executeQuery("SELECT * FROM tblstock where Quantity > 0");
+            DIC_STOCK.clear();
+            ResultSet result = dbConnect.getConnection().createStatement().
+                    executeQuery("SELECT * FROM tblstock where Quantity > 0");
 
             while (result.next()) {
-                DIC_CURRENT_STOCK.put(result.getString("pdtID"), result.getInt("Quantity"));
+                DIC_STOCK.put(result.getString("pdtID"), result.getInt("Quantity"));
             }
         } catch (Exception ex) {
-            try {
-                throw ex;
-            } catch (Exception ex1) {
-                Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex1);
-            }
+            throw ex;
         }
     }
     
     //returns current client selected in drop down
-    @Override
-    public User getActiveUser(javax.swing.JComboBox<String> dd){
-        try {
-            PreparedStatement psGetClient = dbConnect.getConnection().
-                    prepareStatement("Select * from tblClients where clientName=?");
-            psGetClient.setString(1,dd.getSelectedItem().toString());
-            ResultSet result = psGetClient.executeQuery();
-            result.next();
-            return new User(result.getString("clientID"),result.getString("clientName"));
-        } catch (Exception ex) {
-            Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
+    private User getClient() throws Exception{
+        PreparedStatement psGetClient = dbConnect.getConnection().
+        prepareStatement("Select * from tblClients where clientName=?");
+        psGetClient.setString(1,ddClientID.getSelectedItem().toString());
+        ResultSet result = psGetClient.executeQuery();
+        result.next();
+        return new User(result.getString("clientID"),result.getString("clientName"));
     }
     
     //returns selected articles and their quantities
-    @Override
-    public String getSelectedProducts(javax.swing.JTable tbl){
+    private String getSelectedProducts(){
         String orders = "";
-        for(int i = 0;i<tbl.getRowCount();i++){
-            if(tbl.getValueAt(i, 0) == Boolean.TRUE){
-                orders += ((String) tbl.getValueAt(i, 1) + "-" + tbl.getValueAt(i, 3)+" ");
+        for(int i = 0;i<tblTakeOrder.getRowCount();i++){
+            if(tblTakeOrder.getValueAt(i, 0) == Boolean.TRUE){
+                orders += ((String) tblTakeOrder.getValueAt(i, 1) + "-" + tblTakeOrder.getValueAt(i, 3)+" ");
             }
         }
         return orders;
     }
     
-    //queries last order entry and enters next orderID
-    @Override
-    public String getNextOrderID(){
-        try {
-            StringBuilder sb = new StringBuilder();
-            ResultSet result = dbConnect.getConnection().createStatement().
-                    executeQuery("SELECT orderID FROM tblorders ORDER BY orderID DESC LIMIT 1");
-            if (result.next()) {
-                for (char c : result.getString("orderID").toCharArray()) {
-                    if (Character.isDigit(c)) {
-                        sb.append(c);
-                    }
-                }
-                
+    private int getTotalQuantity()
+    {
+        int quantity=0;
+        for(int i = 0;i<tblTakeOrder.getRowCount();i++){
+            if(tblTakeOrder.getValueAt(i, 0) == Boolean.TRUE){
+                quantity += (int)tblTakeOrder.getValueAt(i, 3);
             }
-            return "ord"+Integer.toString(Integer.parseInt(sb.toString())+1);
-        } catch (Exception ex) {
-            Logger.getLogger(frmOrderGenerator.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return null;
+        return quantity;
+    }
+    //queries last order entry and enters next orderID
+    private static String getNextOrderID() throws Exception{
+        StringBuilder sb = new StringBuilder();
+        ResultSet result = dbConnect.getConnection().createStatement().
+                    executeQuery("SELECT orderID FROM tblorders ORDER BY orderID DESC LIMIT 1");
+        if (result.next()) {
+            for (char c : result.getString("orderID").toCharArray()) {
+                if (Character.isDigit(c)) {
+                    sb.append(c);
+                }
+            }
+
+        }
+        return "ord"+Integer.toString(Integer.parseInt(sb.toString())+1);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
