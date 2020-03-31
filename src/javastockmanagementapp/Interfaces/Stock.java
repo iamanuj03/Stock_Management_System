@@ -6,7 +6,6 @@
 package javastockmanagementapp.Interfaces;
 
 import javastockmanagementapp.clsProduct;
-
 /**
  *
  * @author Anuj

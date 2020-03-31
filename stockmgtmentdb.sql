@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 13, 2020 at 08:17 PM
+-- Generation Time: Apr 01, 2020 at 12:45 AM
 -- Server version: 10.4.11-MariaDB
 -- PHP Version: 7.4.3
 
@@ -46,6 +46,28 @@ INSERT INTO `tblclients` (`clientID`, `clientName`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `tblemployee`
+--
+
+CREATE TABLE `tblemployee` (
+  `EmployeeID` varchar(25) NOT NULL,
+  `empName` varchar(255) NOT NULL,
+  `salary` int(11) NOT NULL,
+  `status` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `tblemployee`
+--
+
+INSERT INTO `tblemployee` (`EmployeeID`, `empName`, `salary`, `status`) VALUES
+('e01', 'John Travolta', 50000, 'Permanent'),
+('e02', 'Johny Sins', 69696, 'Permanent'),
+('e03', 'Sunny Deol', 40000, 'Temporary');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `tblorders`
 --
 
@@ -62,7 +84,9 @@ CREATE TABLE `tblorders` (
 
 INSERT INTO `tblorders` (`orderID`, `clientID`, `ordersList`, `Date`) VALUES
 ('ord01', 'c02', 'Biscuit Marie-2Thon-3Delo Vital-2', '2020-03-13'),
-('ord02', 'c01', 'Nuggets-null Matinée-10 ', '2020-10-13');
+('ord2', 'c02', 'Thon-500 ', '2020-03-31'),
+('ord3', 'c02', 'Thon-45 ', '2020-03-31'),
+('ord4', 'c02', 'Biscuit Lu-null ', '2020-04-01');
 
 -- --------------------------------------------------------
 
@@ -129,6 +153,12 @@ INSERT INTO `tblstock` (`pdtID`, `Quantity`) VALUES
 --
 ALTER TABLE `tblclients`
   ADD PRIMARY KEY (`clientID`);
+
+--
+-- Indexes for table `tblemployee`
+--
+ALTER TABLE `tblemployee`
+  ADD PRIMARY KEY (`EmployeeID`);
 
 --
 -- Indexes for table `tblorders`

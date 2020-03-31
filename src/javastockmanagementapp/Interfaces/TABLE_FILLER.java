@@ -5,8 +5,6 @@
  */
 package javastockmanagementapp.Interfaces;
 
-import javastockmanagementapp.Interfaces.GUI_UPDATER;
-
 /**
  *
  * @author Anuj
