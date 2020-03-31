@@ -16,7 +16,7 @@ public class temporaryEmployee extends clsEmployee {
     }
 
     @Override
-    public double CalculateBonus(float salary) {
+    public double CalculateBonus(double salary) {
        return salary*0.05;
     }
 }

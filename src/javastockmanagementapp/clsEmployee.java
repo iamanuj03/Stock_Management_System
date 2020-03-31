@@ -19,7 +19,7 @@ public abstract class clsEmployee {
         this.Name=name;
     }
     
-    public abstract double CalculateBonus(float salary);
+    public abstract double CalculateBonus(double salary);
     
     public String ToString()
     {
