@@ -9,12 +9,15 @@ package javastockmanagementapp;
  *
  * @author Anuj
  */
-public class clsClient {
-    public String sClientID;
-    public String sClientName;
+public class Client extends User {
     
-    public clsClient(String id,String nm){
-        this.sClientID = id;
-        this.sClientName = nm;
+    public Client(String id, String nm) {
+        super(id, nm);
+    }
+    public Client getClient(){
+        return new Client(this.sUserID,this.sUserName);
+    }
+    public void getPromotions(){
+        //to be implemented
     }
 }
