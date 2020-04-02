@@ -9,6 +9,7 @@ package javastockmanagementapp.Interfaces;
  *
  * @author Anuj
  */
+
 public interface TABLE_FILLER extends GUI_UPDATER {
     public abstract void fillTable(javax.swing.JTable tbl);
 }

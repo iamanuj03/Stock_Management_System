@@ -4,10 +4,12 @@
  * and open the template in the editor.
  */
 package javastockmanagementapp.Interfaces;
+
 /**
  *
  * @author Anuj
  */
+
 public interface GUI_UPDATER {
      public abstract void updateTable(javax.swing.JTable tbl);
 }

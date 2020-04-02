@@ -9,6 +9,7 @@ package javastockmanagementapp.Interfaces;
  *
  * @author Anuj
  */
+
 public interface DROPDOWN_UPDATER extends GUI_UPDATER{
     public abstract void fillDropDown(javax.swing.JComboBox dd);
 }

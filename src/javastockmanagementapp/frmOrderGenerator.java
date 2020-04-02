@@ -270,6 +270,7 @@ public class frmOrderGenerator extends javax.swing.JFrame implements javastockma
      @Override
     public void verifyStock(){
         try {
+            
             if (DIC_CURRENT_STOCK != null) {
                 DIC_CURRENT_STOCK.clear();
             }
